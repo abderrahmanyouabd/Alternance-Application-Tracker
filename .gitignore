@@ -19,6 +19,7 @@ instance/
 *.log
 uploads/
 .bolt
+steps.txt
 
 # Node.js
 node_modules/

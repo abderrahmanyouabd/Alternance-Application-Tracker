@@ -67,10 +67,14 @@ export class JobTrackerComponent implements OnInit {
       formData.append('job_url', formValue.job_url);
       
       if (formValue.cv) {
-        formData.append('cv', formValue.cv);
+        // Generate a unique name for the CV using the application ID
+        const cvName = `cv_${Date.now()}.pdf`; // Assuming PDF format for simplicity
+        formData.append('cv', formValue.cv, cvName);
       }
       if (formValue.cover_letter) {
-        formData.append('cover_letter', formValue.cover_letter);
+        // Generate a unique name for the cover letter using the application ID
+        const coverLetterName = `cover_letter_${Date.now()}.pdf`; // Assuming PDF format for simplicity
+        formData.append('cover_letter', formValue.cover_letter, coverLetterName);
       }
 
       this.jobService.addApplication(formData).subscribe(
@@ -148,10 +152,14 @@ export class JobTrackerComponent implements OnInit {
       formData.append('job_url', formValue.job_url);
       
       if (formValue.cv) {
-        formData.append('cv', formValue.cv);
+        // Generate a unique name for the CV using the application ID
+        const cvName = `cv_${this.editingApplication.id}_${Date.now()}.pdf`; // Assuming PDF format for simplicity
+        formData.append('cv', formValue.cv, cvName);
       }
       if (formValue.cover_letter) {
-        formData.append('cover_letter', formValue.cover_letter);
+        // Generate a unique name for the cover letter using the application ID
+        const coverLetterName = `cover_letter_${this.editingApplication.id}_${Date.now()}.pdf`; // Assuming PDF format for simplicity
+        formData.append('cover_letter', formValue.cover_letter, coverLetterName);
       }
 
       this.jobService.updateApplication(this.editingApplication.id, formData).subscribe(
