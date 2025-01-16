@@ -12,5 +12,6 @@ export enum ApplicationStatus {
   INTERVIEW = 'Interview',
   REJECTED = 'Rejected',
   ACCEPTED = 'Accepted',
-  PENDING = 'Pending'
+  PENDING = 'Pending',
+  TO_APPLY = 'To Apply'
 }
