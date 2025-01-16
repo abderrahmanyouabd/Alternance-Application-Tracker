@@ -1,0 +1,45 @@
+.angular
+dist
+node_modules
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Flask specific
+instance/
+.env
+*.log
+uploads/
+.bolt
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Angular specific
+dist/
+out-tsc/
+coverage/
+*.js
+*.map
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db

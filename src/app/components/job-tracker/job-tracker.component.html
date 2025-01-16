@@ -1,0 +1,125 @@
+<div class="tracker-container">
+  <h1>Alternance Job Application Tracker</h1>
+
+  <div class="form-section">
+    <h2>Add New Application</h2>
+    <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="name">Company Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name" 
+          class="form-control"
+          placeholder="Enter company name">
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" formControlName="status" class="form-control">
+          <option *ngFor="let status of statuses" [value]="status">
+            {{status}}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="job_url">Job Description URL</label>
+        <input 
+          type="url" 
+          id="job_url" 
+          formControlName="job_url" 
+          class="form-control"
+          placeholder="Enter job posting URL">
+      </div>
+
+      <div class="form-group">
+        <label for="cv">CV</label>
+        <input 
+          #cvInput
+          type="file" 
+          id="cv" 
+          class="file-input"
+          (change)="onFileChange($event, 'cv')"
+          accept=".pdf,.doc,.docx">
+      </div>
+      
+      <div class="form-group">
+        <label for="cover_letter">Cover Letter</label>
+        <input 
+          #coverLetterInput
+          type="file" 
+          id="cover_letter" 
+          class="file-input"
+          (change)="onFileChange($event, 'cover_letter')"
+          accept=".pdf,.doc,.docx">
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="!applicationForm.valid">
+        Add Application
+      </button>
+    </form>
+  </div>
+
+  <div class="filter-section">
+    <div class="form-group">
+      <label for="filterStatus">Filter by Status</label>
+      <select 
+        id="filterStatus" 
+        [(ngModel)]="filterStatus" 
+        class="form-control"
+        (change)="applyFilters()">
+        <option value="">All Statuses</option>
+        <option *ngFor="let status of statuses" [value]="status">
+          {{status}}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="filterCompany">Filter by Company</label>
+      <input 
+        type="text" 
+        id="filterCompany" 
+        [(ngModel)]="filterCompany" 
+        class="form-control"
+        placeholder="Enter company name"
+        (input)="applyFilters()">
+    </div>
+
+    <button class="btn btn-secondary" (click)="clearFilters()">
+      Clear Filters
+    </button>
+  </div>
+
+  <table class="applications-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Status</th>
+        <th>Job URL</th>
+        <th>CV</th>
+        <th>Cover Letter</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let app of applications">
+        <td>{{app.name}}</td>
+        <td [ngClass]="'status-' + app.status.toLowerCase()">{{app.status}}</td>
+        <td><a [href]="app.job_url" target="_blank" target="_blank" rel="noopener noreferrer">View Description</a></td>
+        <td>
+          <a *ngIf="app.cv" [href]="'http://localhost:5000/api/applications/' + app.id + '/cv'" target="_blank">
+            View CV
+          </a>
+          <span *ngIf="!app.cv">Not uploaded</span>
+        </td>
+        <td>
+          <a *ngIf="app.cover_letter" [href]="'http://localhost:5000/api/applications/' + app.id + '/cover_letter'" target="_blank">
+            View Cover Letter
+          </a>
+          <span *ngIf="!app.cover_letter">Not uploaded</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
