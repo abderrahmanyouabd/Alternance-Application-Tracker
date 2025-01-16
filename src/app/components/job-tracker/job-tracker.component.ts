@@ -21,11 +21,23 @@ export class JobTrackerComponent implements OnInit {
   @ViewChild('cvInput') cvInput!: ElementRef;
   @ViewChild('coverLetterInput') coverLetterInput!: ElementRef;
 
+  editingApplication: JobApplication | null = null;
+  showEditModal: boolean = false;
+  editForm: FormGroup;
+
   constructor(
     private jobService: JobService,
     private fb: FormBuilder
   ) {
     this.applicationForm = this.fb.group({
+      name: ['', Validators.required],
+      status: [ApplicationStatus.PENDING, Validators.required],
+      job_url: ['', Validators.required],
+      cv: [null],
+      cover_letter: [null]
+    });
+
+    this.editForm = this.fb.group({
       name: ['', Validators.required],
       status: [ApplicationStatus.PENDING, Validators.required],
       job_url: ['', Validators.required],
@@ -106,4 +118,62 @@ export class JobTrackerComponent implements OnInit {
     this.filterCompany = '';
     this.loadApplications();
   }
+
+
+
+  openEditModal(application: JobApplication) {
+    this.editingApplication = application;
+    this.editForm.patchValue({
+      name: application.name,
+      status: application.status,
+      job_url: application.job_url
+    });
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editingApplication = null;
+    this.editForm.reset();
+    this.clearFileInputs();
+  }
+
+  onUpdate() {
+    if (this.editForm.valid && this.editingApplication && this.editingApplication.id) {
+      const formData = new FormData();
+      const formValue = this.editForm.value;
+      
+      formData.append('name', formValue.name);
+      formData.append('status', formValue.status);
+      formData.append('job_url', formValue.job_url);
+      
+      if (formValue.cv) {
+        formData.append('cv', formValue.cv);
+      }
+      if (formValue.cover_letter) {
+        formData.append('cover_letter', formValue.cover_letter);
+      }
+
+      this.jobService.updateApplication(this.editingApplication.id, formData).subscribe(
+        () => {
+          this.loadApplications();
+          this.closeEditModal();
+        }
+      );
+    }
+  }
+
+
+  deleteApplication(id: number | undefined) {
+    if (id === undefined) return;
+    
+    if (confirm('Are you sure you want to delete this application?')) {
+      this.jobService.deleteApplication(id).subscribe(
+        () => {
+          this.loadApplications();
+        }
+      );
+    }
+  }
+
 }

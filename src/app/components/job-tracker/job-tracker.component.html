@@ -100,13 +100,14 @@
         <th>Job URL</th>
         <th>CV</th>
         <th>Cover Letter</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let app of applications">
         <td>{{app.name}}</td>
         <td [ngClass]="'status-' + app.status.toLowerCase()">{{app.status}}</td>
-        <td><a [href]="app.job_url" target="_blank" target="_blank" rel="noopener noreferrer">View Description</a></td>
+        <td><a [href]="app.job_url" target="_blank" rel="noopener noreferrer">View Description</a></td>
         <td>
           <a *ngIf="app.cv" [href]="'http://localhost:5000/api/applications/' + app.id + '/cv'" target="_blank">
             View CV
@@ -119,7 +120,86 @@
           </a>
           <span *ngIf="!app.cover_letter">Not uploaded</span>
         </td>
+        <td class="actions-column">
+          <button class="btn btn-sm btn-primary mr-2" (click)="openEditModal(app)">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="deleteApplication(app.id)">
+            🗑️
+          </button>
+        </td>
       </tr>
     </tbody>
   </table>
+
+  <!-- Edit Modal -->
+  <div class="modal" [class.show]="showEditModal" *ngIf="showEditModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Application</h5>
+          <button type="button" class="close" (click)="closeEditModal()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="editForm" (ngSubmit)="onUpdate()">
+            <div class="form-group">
+              <label for="edit-name">Company Name</label>
+              <input 
+                type="text" 
+                id="edit-name" 
+                formControlName="name" 
+                class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="edit-status">Status</label>
+              <select id="edit-status" formControlName="status" class="form-control">
+                <option *ngFor="let status of statuses" [value]="status">
+                  {{status}}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-job_url">Job Description URL</label>
+              <input 
+                type="url" 
+                id="edit-job_url" 
+                formControlName="job_url" 
+                class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="edit-cv">CV (Optional)</label>
+              <input 
+                #editCvInput
+                type="file" 
+                id="edit-cv" 
+                class="file-input"
+                (change)="onFileChange($event, 'cv')"
+                accept=".pdf,.doc,.docx">
+            </div>
+
+            <div class="form-group">
+              <label for="edit-cover_letter">Cover Letter (Optional)</label>
+              <input 
+                #editCoverLetterInput
+                type="file" 
+                id="edit-cover_letter" 
+                class="file-input"
+                (change)="onFileChange($event, 'cover_letter')"
+                accept=".pdf,.doc,.docx">
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="!editForm.valid">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -37,4 +37,12 @@ export class JobService {
       responseType: 'blob',
     });
   }
+
+  updateApplication(id: number, application: FormData): Observable<JobApplication> {
+    return this.http.put<JobApplication>(`${this.apiUrl}/applications/${id}`, application);
+  }
+
+  deleteApplication(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/applications/${id}`);
+  }
 }

@@ -1,5 +1,5 @@
 export interface JobApplication {
-  id?: number;
+  id: number;
   name: string;
   status: ApplicationStatus;
   job_url: string;

@@ -110,5 +110,52 @@ def get_cover_letter(application_id):
         return jsonify({"error": "Application not found"}), 404
     return send_file(application.cover_letter, as_attachment=False)  # Change to as_attachment=False
 
+@app.route('/api/applications/<int:application_id>', methods=['PUT'])
+def update_application(application_id):
+    """Update a job application."""
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    data = request.form  # For handling FormData
+    if 'cv' in request.files:
+        cv_file = request.files['cv']
+        cv_filename = secure_filename(cv_file.filename)
+        cv_path = os.path.join(app.config['UPLOAD_FOLDER'], cv_filename)
+        cv_file.save(cv_path)
+        application.cv = cv_path
+
+    if 'cover_letter' in request.files:
+        cover_letter_file = request.files['cover_letter']
+        cover_letter_filename = secure_filename(cover_letter_file.filename)
+        cover_letter_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_letter_filename)
+        cover_letter_file.save(cover_letter_path)
+        application.cover_letter = cover_letter_path
+
+    application.name = data.get("name")
+    application.status = data.get("status")
+    application.job_url = data.get("job_url")
+
+    db.session.commit()
+    return jsonify({
+        "id": application.id,
+        "name": application.name,
+        "status": application.status,
+        "job_url": application.job_url,
+        "cv": application.cv,
+        "cover_letter": application.cover_letter
+    })
+
+@app.route('/api/applications/<int:application_id>', methods=['DELETE'])
+def remove_application(application_id):
+    """Remove a job application."""
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    db.session.delete(application)
+    db.session.commit()
+    return jsonify({"message": "Application removed successfully"}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
