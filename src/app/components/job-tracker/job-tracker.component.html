@@ -1,30 +1,48 @@
 <div class="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
-  <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Alternance Application Tracker</h1>
-
-  <div class="card mb-8">
-    <h2 class="text-2xl font-semibold text-gray-700 mb-6">Add New Application</h2>
+  <div class="card mb-8" *ngIf="!showOnlyList">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-6">
+      {{languageService.translate('add_new_application')}}
+    </h2>
     <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()" class="space-y-6">
       <div class="space-y-2">
-        <label for="name" class="block font-medium text-gray-700">Company Name</label>
-        <input type="text" id="name" formControlName="name" class="form-input" placeholder="Enter company name">
+        <label for="name" class="block font-medium text-gray-700">
+          {{languageService.translate('company_name')}}
+        </label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name" 
+          class="form-input" 
+          [placeholder]="languageService.translate('enter_company_name')">
       </div>
 
       <div class="space-y-2">
-        <label for="status" class="block font-medium text-gray-700">Status</label>
+        <label for="status" class="block font-medium text-gray-700">
+          {{languageService.translate('status')}}
+        </label>
         <select id="status" formControlName="status" class="form-input">
           <option *ngFor="let status of statuses" [value]="status">
-            {{status}}
+            {{languageService.translate(status.toLowerCase())}}
           </option>
         </select>
       </div>
 
       <div class="space-y-2">
-        <label for="job_url" class="block font-medium text-gray-700">Job Description URL</label>
-        <input type="url" id="job_url" formControlName="job_url" class="form-input" placeholder="Enter job posting URL">
+        <label for="job_url" class="block font-medium text-gray-700">
+          {{languageService.translate('job_url')}}
+        </label>
+        <input 
+          type="url" 
+          id="job_url" 
+          formControlName="job_url" 
+          class="form-input" 
+          [placeholder]="languageService.translate('enter_job_url')">
       </div>
 
       <div class="space-y-2">
-        <label for="cv" class="block font-medium text-gray-700">CV</label>
+        <label for="cv" class="block font-medium text-gray-700">
+          {{languageService.translate('cv')}}
+        </label>
         <input 
           #cvInput
           type="file" 
@@ -35,7 +53,9 @@
       </div>
       
       <div class="space-y-2">
-        <label for="cover_letter" class="block font-medium text-gray-700">Cover Letter</label>
+        <label for="cover_letter" class="block font-medium text-gray-700">
+          {{languageService.translate('cover_letter')}}
+        </label>
         <input 
           #coverLetterInput
           type="file" 
@@ -46,99 +66,107 @@
       </div>
 
       <button type="submit" class="btn btn-primary" [disabled]="!applicationForm.valid">
-        Add Application
+        {{languageService.translate('add_application_button')}}
       </button>
     </form>
   </div>
 
-  <div class="filter-section fade-in">
-    <div class="form-group">
-      <label for="filterStatus">Filter by Status</label>
-      <select 
-        id="filterStatus" 
-        [(ngModel)]="filterStatus" 
-        class="form-control"
-        (change)="applyFilters()">
-        <option value="">All Statuses</option>
-        <option *ngFor="let status of statuses" [value]="status">
-          {{status}}
-        </option>
-      </select>
+  <ng-container *ngIf="!showOnlyForm">
+    <div class="filter-section fade-in">
+      <div class="flex flex-col">
+        <label for="filterStatus">{{languageService.translate('filter_by_status')}}</label>
+        <select 
+          id="filterStatus" 
+          [(ngModel)]="filterStatus" 
+          class="form-control mt-2"
+          (change)="applyFilters()">
+          <option value="">{{languageService.translate('all_statuses')}}</option>
+          <option *ngFor="let status of statuses" [value]="status">
+            {{languageService.translate(status.toLowerCase())}}
+          </option>
+        </select>
+      </div>
+
+      <div class="flex flex-col">
+        <label for="filterCompany">{{languageService.translate('filter_by_company')}}</label>
+        <input 
+          type="text" 
+          id="filterCompany" 
+          [(ngModel)]="filterCompany" 
+          class="form-control mt-2"
+          [placeholder]="languageService.translate('enter_company_name')"
+          (input)="applyFilters()">
+      </div>
+
+      <div class="flex items-end">
+        <button class="btn btn-secondary text-sm px-3 py-2" (click)="clearFilters()">
+          {{languageService.translate('clear_filters')}}
+        </button>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="filterCompany">Filter by Company</label>
-      <input 
-        type="text" 
-        id="filterCompany" 
-        [(ngModel)]="filterCompany" 
-        class="form-control"
-        placeholder="Enter company name"
-        (input)="applyFilters()">
+    <div class="flex justify-end mb-4">
+      <button 
+        class="btn btn-secondary flex items-center gap-2" 
+        (click)="exportToExcel()"
+        [disabled]="!applications.length">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+        {{languageService.translate('export_to_excel')}}
+      </button>
     </div>
 
-    <button class="btn btn-secondary" (click)="clearFilters()">
-      Clear Filters
-    </button>
-  </div>
+    <div class="loading-spinner" *ngIf="loading"></div>
 
-  <div class="flex justify-end mb-4">
-    <button 
-      class="btn btn-secondary flex items-center gap-2" 
-      (click)="exportToExcel()"
-      [disabled]="!applications.length">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-      </svg>
-      Export to Excel
-    </button>
-  </div>
-
-  <div class="loading-spinner" *ngIf="loading"></div>
-
-  <table class="applications-table fade-in" *ngIf="!loading">
-    <thead>
-      <tr>
-        <th>Company</th>
-        <th>Status</th>
-        <th>Job URL</th>
-        <th>CV</th>
-        <th>Cover Letter</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let app of applications" class="fade-in">
-        <td>{{app.name}}</td>
-        <td>
-          <span class="status-badge" [ngClass]="'status-' + app.status.toLowerCase()">
-            {{app.status}}
-          </span>
-        </td>
-        <td><a [href]="app.job_url" target="_blank" rel="noopener noreferrer">View Description</a></td>
-        <td>
-          <a *ngIf="app.cv" [href]="'http://localhost:5000/api/applications/' + app.id + '/cv'" target="_blank">
-            View CV
-          </a>
-          <span *ngIf="!app.cv">Not uploaded</span>
-        </td>
-        <td>
-          <a *ngIf="app.cover_letter" [href]="'http://localhost:5000/api/applications/' + app.id + '/cover_letter'" target="_blank">
-            View Cover Letter
-          </a>
-          <span *ngIf="!app.cover_letter">Not uploaded</span>
-        </td>
-        <td class="actions-column">
-          <button class="btn btn-sm btn-primary mr-2" (click)="openEditModal(app)">
-            <i class="fas fa-edit"></i> Edit
-          </button>
-          <button class="btn btn-sm btn-danger" (click)="deleteApplication(app.id)">
-            🗑️
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="applications-table fade-in" *ngIf="!loading">
+      <thead>
+        <tr>
+          <th>{{languageService.translate('company')}}</th>
+          <th>{{languageService.translate('status')}}</th>
+          <th>{{languageService.translate('job_url')}}</th>
+          <th>{{languageService.translate('cv')}}</th>
+          <th>{{languageService.translate('cover_letter')}}</th>
+          <th>{{languageService.translate('actions')}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let app of applications" class="fade-in">
+          <td>{{app.name}}</td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + app.status.toLowerCase()">
+              {{app.status}}
+            </span>
+          </td>
+          <td>
+            <a [href]="sanitizeUrl(app.job_url)" target="_blank" rel="noopener noreferrer">
+              {{languageService.translate('view_description')}}
+            </a>
+          </td>
+          <td>
+            <a *ngIf="app.cv" [href]="'http://localhost:5000/api/applications/' + app.id + '/cv'" target="_blank">
+              {{languageService.translate('view_cv')}}
+            </a>
+            <span *ngIf="!app.cv">{{languageService.translate('not_uploaded')}}</span>
+          </td>
+          <td>
+            <a *ngIf="app.cover_letter" [href]="'http://localhost:5000/api/applications/' + app.id + '/cover_letter'" target="_blank">
+              {{languageService.translate('view_cover_letter')}}
+            </a>
+            <span *ngIf="!app.cover_letter">{{languageService.translate('not_uploaded')}}</span>
+          </td>
+          <td class="actions-column">
+            <button class="btn btn-sm btn-primary mr-2" (click)="openEditModal(app)">
+              <i class="fas fa-edit"></i> {{languageService.translate('edit')}}
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteApplication(app.id)">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
 
   <div class="toast" [ngClass]="toastClass" *ngIf="showToast">
     {{toastMessage}}
@@ -148,7 +176,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Application</h5>
+          <h5 class="modal-title">{{languageService.translate('edit_application')}}</h5>
           <button type="button" class="close" (click)="closeEditModal()">
             <span>&times;</span>
           </button>
@@ -156,7 +184,7 @@
         <div class="modal-body">
           <form [formGroup]="editForm" (ngSubmit)="onUpdate()">
             <div class="form-group">
-              <label for="edit-name">Company Name</label>
+              <label for="edit-name">{{languageService.translate('company_name')}}</label>
               <input 
                 type="text" 
                 id="edit-name" 
@@ -165,7 +193,7 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-status">Status</label>
+              <label for="edit-status">{{languageService.translate('status')}}</label>
               <select id="edit-status" formControlName="status" class="form-control">
                 <option *ngFor="let status of statuses" [value]="status">
                   {{status}}
@@ -174,7 +202,7 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-job_url">Job Description URL</label>
+              <label for="edit-job_url">{{languageService.translate('job_url')}}</label>
               <input 
                 type="url" 
                 id="edit-job_url" 
@@ -183,7 +211,7 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-cv">CV (Optional)</label>
+              <label for="edit-cv">{{languageService.translate('cv')}} (Optional)</label>
               <input 
                 #editCvInput
                 type="file" 
@@ -194,7 +222,7 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-cover_letter">Cover Letter (Optional)</label>
+              <label for="edit-cover_letter">{{languageService.translate('cover_letter')}} (Optional)</label>
               <input 
                 #editCoverLetterInput
                 type="file" 
@@ -205,8 +233,8 @@
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="!editForm.valid">Update</button>
+              <button type="button" class="btn btn-secondary" (click)="closeEditModal()">{{languageService.translate('cancel')}}</button>
+              <button type="submit" class="btn btn-primary" [disabled]="!editForm.valid">{{languageService.translate('update')}}</button>
             </div>
           </form>
         </div>
