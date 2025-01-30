@@ -25,6 +25,11 @@ export class JobTrackerComponent implements OnInit {
   showEditModal: boolean = false;
   editForm: FormGroup;
 
+  loading = false;
+  showToast = false;
+  toastMessage = '';
+  toastClass = '';
+
   constructor(
     private jobService: JobService,
     private fb: FormBuilder
@@ -51,14 +56,22 @@ export class JobTrackerComponent implements OnInit {
   }
 
   loadApplications() {
+    this.loading = true;
     this.jobService.getApplications().subscribe(
-      data => {this.applications = data;
-        console.log(this.applications);
-  });
+      data => {
+        this.applications = data;
+        this.loading = false;
+      },
+      error => {
+        this.showToastMessage('Error loading applications', 'error');
+        this.loading = false;
+      }
+    );
   }
 
   onSubmit() {
     if (this.applicationForm.valid) {
+      this.loading = true;
       const formData = new FormData();
       const formValue = this.applicationForm.value;
       
@@ -82,6 +95,12 @@ export class JobTrackerComponent implements OnInit {
           this.loadApplications();
           this.applicationForm.reset();
           this.clearFileInputs();
+          this.showToastMessage('Application added successfully', 'success');
+          this.loading = false;
+        },
+        error => {
+          this.showToastMessage('Error adding application', 'error');
+          this.loading = false;
         }
       );
     }
@@ -122,8 +141,6 @@ export class JobTrackerComponent implements OnInit {
     this.filterCompany = '';
     this.loadApplications();
   }
-
-
 
   openEditModal(application: JobApplication) {
     this.editingApplication = application;
@@ -171,7 +188,6 @@ export class JobTrackerComponent implements OnInit {
     }
   }
 
-
   deleteApplication(id: number | undefined) {
     if (id === undefined) return;
     
@@ -184,4 +200,25 @@ export class JobTrackerComponent implements OnInit {
     }
   }
 
+  showToastMessage(message: string, type: 'success' | 'error') {
+    this.toastMessage = message;
+    this.toastClass = `toast toast-${type}`;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
+
+  exportToExcel() {
+    if (this.applications.length > 0) {
+      try {
+        this.jobService.exportToExcel(this.applications);
+        this.showToastMessage('Applications exported successfully', 'success');
+      } catch (error) {
+        this.showToastMessage('Error exporting applications', 'error');
+      }
+    } else {
+      this.showToastMessage('No applications to export', 'error');
+    }
+  }
 }
