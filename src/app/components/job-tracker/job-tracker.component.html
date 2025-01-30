@@ -1,40 +1,30 @@
-<div class="tracker-container">
-  <h1>Alternance Application Tracker</h1>
+<div class="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+  <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Alternance Application Tracker</h1>
 
-  <div class="form-section">
-    <h2>Add New Application</h2>
-    <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="name">Company Name</label>
-        <input 
-          type="text" 
-          id="name" 
-          formControlName="name" 
-          class="form-control"
-          placeholder="Enter company name">
+  <div class="card mb-8">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-6">Add New Application</h2>
+    <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <div class="space-y-2">
+        <label for="name" class="block font-medium text-gray-700">Company Name</label>
+        <input type="text" id="name" formControlName="name" class="form-input" placeholder="Enter company name">
       </div>
 
-      <div class="form-group">
-        <label for="status">Status</label>
-        <select id="status" formControlName="status" class="form-control">
+      <div class="space-y-2">
+        <label for="status" class="block font-medium text-gray-700">Status</label>
+        <select id="status" formControlName="status" class="form-input">
           <option *ngFor="let status of statuses" [value]="status">
             {{status}}
           </option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label for="job_url">Job Description URL</label>
-        <input 
-          type="url" 
-          id="job_url" 
-          formControlName="job_url" 
-          class="form-control"
-          placeholder="Enter job posting URL">
+      <div class="space-y-2">
+        <label for="job_url" class="block font-medium text-gray-700">Job Description URL</label>
+        <input type="url" id="job_url" formControlName="job_url" class="form-input" placeholder="Enter job posting URL">
       </div>
 
-      <div class="form-group">
-        <label for="cv">CV</label>
+      <div class="space-y-2">
+        <label for="cv" class="block font-medium text-gray-700">CV</label>
         <input 
           #cvInput
           type="file" 
@@ -44,8 +34,8 @@
           accept=".pdf,.doc,.docx">
       </div>
       
-      <div class="form-group">
-        <label for="cover_letter">Cover Letter</label>
+      <div class="space-y-2">
+        <label for="cover_letter" class="block font-medium text-gray-700">Cover Letter</label>
         <input 
           #coverLetterInput
           type="file" 
@@ -61,7 +51,7 @@
     </form>
   </div>
 
-  <div class="filter-section">
+  <div class="filter-section fade-in">
     <div class="form-group">
       <label for="filterStatus">Filter by Status</label>
       <select 
@@ -92,7 +82,21 @@
     </button>
   </div>
 
-  <table class="applications-table">
+  <div class="flex justify-end mb-4">
+    <button 
+      class="btn btn-secondary flex items-center gap-2" 
+      (click)="exportToExcel()"
+      [disabled]="!applications.length">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+      </svg>
+      Export to Excel
+    </button>
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading"></div>
+
+  <table class="applications-table fade-in" *ngIf="!loading">
     <thead>
       <tr>
         <th>Company</th>
@@ -104,9 +108,13 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let app of applications">
+      <tr *ngFor="let app of applications" class="fade-in">
         <td>{{app.name}}</td>
-        <td [ngClass]="'status-' + app.status.toLowerCase()">{{app.status}}</td>
+        <td>
+          <span class="status-badge" [ngClass]="'status-' + app.status.toLowerCase()">
+            {{app.status}}
+          </span>
+        </td>
         <td><a [href]="app.job_url" target="_blank" rel="noopener noreferrer">View Description</a></td>
         <td>
           <a *ngIf="app.cv" [href]="'http://localhost:5000/api/applications/' + app.id + '/cv'" target="_blank">
@@ -132,7 +140,10 @@
     </tbody>
   </table>
 
-  <!-- Edit Modal -->
+  <div class="toast" [ngClass]="toastClass" *ngIf="showToast">
+    {{toastMessage}}
+  </div>
+
   <div class="modal" [class.show]="showEditModal" *ngIf="showEditModal">
     <div class="modal-dialog">
       <div class="modal-content">
