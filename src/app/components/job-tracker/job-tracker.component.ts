@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { JobService } from '../../services/job.service';
 import { JobApplication, ApplicationStatus } from '../../models/job-application';
 import { HttpClientModule } from '@angular/common/http';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-job-tracker',
@@ -13,6 +15,8 @@ import { HttpClientModule } from '@angular/common/http';
   styleUrls: ['./job-tracker.component.css']
 })
 export class JobTrackerComponent implements OnInit {
+  @Input() showOnlyForm = false;
+  @Input() showOnlyList = false;
   applications: JobApplication[] = [];
   applicationForm: FormGroup;
   statuses = Object.values(ApplicationStatus);
@@ -32,7 +36,9 @@ export class JobTrackerComponent implements OnInit {
 
   constructor(
     private jobService: JobService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private sanitizer: DomSanitizer,
+    public languageService: LanguageService
   ) {
     this.applicationForm = this.fb.group({
       name: ['', Validators.required],
@@ -220,5 +226,13 @@ export class JobTrackerComponent implements OnInit {
     } else {
       this.showToastMessage('No applications to export', 'error');
     }
+  }
+
+  sanitizeUrl(url: string): SafeUrl {
+    // If URL doesn't start with http:// or https://, add https://
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    return this.sanitizer.bypassSecurityTrustUrl(url);
   }
 }
