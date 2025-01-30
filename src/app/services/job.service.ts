@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { JobApplication } from '../models/job-application';
+import * as XLSX from 'xlsx';
 
 @Injectable({
   providedIn: 'root'
@@ -44,5 +45,28 @@ export class JobService {
 
   deleteApplication(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/applications/${id}`);
+  }
+
+  exportToExcel(applications: JobApplication[]) {
+    // Prepare data for export
+    const exportData = applications.map(app => ({
+      'Company Name': app.name,
+      'Status': app.status,
+      'Job URL': app.job_url,
+      'CV': app.cv ? 'Uploaded' : 'Not uploaded',
+      'Cover Letter': app.cover_letter ? 'Uploaded' : 'Not uploaded',
+      'Application Date': new Date().toLocaleDateString() // You might want to add a date field to your model
+    }));
+
+    // Create worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Create workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Applications');
+
+    // Save file
+    const fileName = `job_applications_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 }
