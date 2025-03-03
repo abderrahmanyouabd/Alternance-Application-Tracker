@@ -14,10 +14,10 @@ build/
 *.egg
 
 # Flask specific
-instance/
+# instance/
 .env
 *.log
-uploads/
+# uploads/
 .bolt
 steps.txt
 

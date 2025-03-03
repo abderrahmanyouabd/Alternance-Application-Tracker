@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
+import logging
 
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing for Angular frontend
@@ -13,6 +14,9 @@ app.config['UPLOAD_FOLDER'] = 'uploads'  # Folder for uploaded files
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Ensure folder exists
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,28 +43,29 @@ def get_applications():
 def add_application():
     """Add a new job application."""
     data = request.form  # For handling FormData
-    if 'cv' not in request.files or 'cover_letter' not in request.files:
-        return jsonify({"error": "Both CV and Cover Letter are required"}), 400
+    cv_file = request.files.get('cv')
+    cover_letter_file = request.files.get('cover_letter')
 
-    cv_file = request.files['cv']
-    cover_letter_file = request.files['cover_letter']
+    # Save files securely if provided
+    cv_path = None
+    cover_letter_path = None
 
-    # Save files securely
-    cv_filename = secure_filename(cv_file.filename)
-    cover_letter_filename = secure_filename(cover_letter_file.filename)
+    if cv_file:
+        cv_filename = secure_filename(cv_file.filename)
+        cv_path = os.path.join(app.config['UPLOAD_FOLDER'], cv_filename)
+        cv_file.save(cv_path)
 
-    cv_path = os.path.join(app.config['UPLOAD_FOLDER'], cv_filename)
-    cover_letter_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_letter_filename)
-
-    cv_file.save(cv_path)
-    cover_letter_file.save(cover_letter_path)
+    if cover_letter_file:
+        cover_letter_filename = secure_filename(cover_letter_file.filename)
+        cover_letter_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_letter_filename)
+        cover_letter_file.save(cover_letter_path)
 
     new_application = Application(
         name=data.get("name"),
         status=data.get("status"),
         job_url=data.get("job_url"),
-        cv=cv_path,
-        cover_letter=cover_letter_path
+        cv=cv_path if cv_path else '',  # Set to empty string if not provided
+        cover_letter=cover_letter_path if cover_letter_path else ''  # Set to empty string if not provided
     )
     db.session.add(new_application)
     db.session.commit()
@@ -118,19 +123,23 @@ def update_application(application_id):
         return jsonify({"error": "Application not found"}), 404
 
     data = request.form  # For handling FormData
+    logging.info(f"Received data for application ID {application_id}: {data}")
+
     if 'cv' in request.files:
         cv_file = request.files['cv']
+        logging.info(f"CV file received: {cv_file.filename}")
         cv_filename = secure_filename(cv_file.filename)
         cv_path = os.path.join(app.config['UPLOAD_FOLDER'], cv_filename)
         cv_file.save(cv_path)
-        application.cv = cv_path
+        application.cv = cv_path  # Update the path in the database
 
     if 'cover_letter' in request.files:
         cover_letter_file = request.files['cover_letter']
+        logging.info(f"Cover letter file received: {cover_letter_file.filename}")
         cover_letter_filename = secure_filename(cover_letter_file.filename)
         cover_letter_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_letter_filename)
         cover_letter_file.save(cover_letter_path)
-        application.cover_letter = cover_letter_path
+        application.cover_letter = cover_letter_path  # Update the path in the database
 
     application.name = data.get("name")
     application.status = data.get("status")
@@ -152,6 +161,24 @@ def remove_application(application_id):
     application = Application.query.get(application_id)
     if not application:
         return jsonify({"error": "Application not found"}), 404
+
+    # Get the request data
+    data = request.get_json()
+    cv_path = data.get('cv')
+    cover_letter_path = data.get('cover_letter')
+
+    # Remove the corresponding CV and cover letter files
+    if cv_path:
+        try:
+            os.remove(cv_path)  # Remove the CV file
+        except Exception as e:
+            logging.error(f"Error deleting CV file: {e}")
+
+    if cover_letter_path:
+        try:
+            os.remove(cover_letter_path)  # Remove the cover letter file
+        except Exception as e:
+            logging.error(f"Error deleting cover letter file: {e}")
 
     db.session.delete(application)
     db.session.commit()

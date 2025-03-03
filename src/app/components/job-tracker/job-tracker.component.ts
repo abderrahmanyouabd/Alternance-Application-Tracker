@@ -42,7 +42,7 @@ export class JobTrackerComponent implements OnInit {
   ) {
     this.applicationForm = this.fb.group({
       name: ['', Validators.required],
-      status: [ApplicationStatus.PENDING, Validators.required],
+      status: [ApplicationStatus.TO_APPLY, Validators.required],
       job_url: ['', Validators.required],
       cv: [null],
       cover_letter: [null]
@@ -50,7 +50,7 @@ export class JobTrackerComponent implements OnInit {
 
     this.editForm = this.fb.group({
       name: ['', Validators.required],
-      status: [ApplicationStatus.PENDING, Validators.required],
+      status: [ApplicationStatus.TO_APPLY, Validators.required],
       job_url: ['', Validators.required],
       cv: [null],
       cover_letter: [null]
@@ -85,13 +85,14 @@ export class JobTrackerComponent implements OnInit {
       formData.append('status', formValue.status);
       formData.append('job_url', formValue.job_url);
       
+      // Check if CV is provided
       if (formValue.cv) {
-        // Generate a unique name for the CV using the application ID
         const cvName = `cv_${Date.now()}.pdf`; // Assuming PDF format for simplicity
         formData.append('cv', formValue.cv, cvName);
       }
+
+      // Check if cover letter is provided
       if (formValue.cover_letter) {
-        // Generate a unique name for the cover letter using the application ID
         const coverLetterName = `cover_letter_${Date.now()}.pdf`; // Assuming PDF format for simplicity
         formData.append('cover_letter', formValue.cover_letter, coverLetterName);
       }
@@ -130,10 +131,10 @@ export class JobTrackerComponent implements OnInit {
 
   onFileChange(event: any, type: 'cv' | 'cover_letter') {
     if (event.target.files.length > 0) {
-      const file = event.target.files[0];
-      this.applicationForm.patchValue({
-        [type]: file
-      });
+        const file = event.target.files[0];
+        this.editForm.patchValue({
+            [type]: file
+        });
     }
   }
 
@@ -167,42 +168,57 @@ export class JobTrackerComponent implements OnInit {
 
   onUpdate() {
     if (this.editForm.valid && this.editingApplication && this.editingApplication.id) {
-      const formData = new FormData();
-      const formValue = this.editForm.value;
-      
-      formData.append('name', formValue.name);
-      formData.append('status', formValue.status);
-      formData.append('job_url', formValue.job_url);
-      
-      if (formValue.cv) {
-        // Generate a unique name for the CV using the application ID
-        const cvName = `cv_${this.editingApplication.id}_${Date.now()}.pdf`; // Assuming PDF format for simplicity
-        formData.append('cv', formValue.cv, cvName);
-      }
-      if (formValue.cover_letter) {
-        // Generate a unique name for the cover letter using the application ID
-        const coverLetterName = `cover_letter_${this.editingApplication.id}_${Date.now()}.pdf`; // Assuming PDF format for simplicity
-        formData.append('cover_letter', formValue.cover_letter, coverLetterName);
-      }
+        const formData = new FormData();
+        const formValue = this.editForm.value;
 
-      this.jobService.updateApplication(this.editingApplication.id, formData).subscribe(
-        () => {
-          this.loadApplications();
-          this.closeEditModal();
+        formData.append('name', formValue.name);
+        formData.append('status', formValue.status);
+        formData.append('job_url', formValue.job_url);
+
+        // Check if CV is provided and update it
+        if (formValue.cv) {
+            const cvName = `cv_${this.editingApplication.id}_${Date.now()}.pdf`;
+            formData.append('cv', formValue.cv, cvName);
+        } else {
+            formData.append('cv', this.editingApplication.cv!);
         }
-      );
+
+        // Check if cover letter is provided and update it
+        if (formValue.cover_letter) {
+            const coverLetterName = `cover_letter_${this.editingApplication.id}_${Date.now()}.pdf`;
+            formData.append('cover_letter', formValue.cover_letter, coverLetterName);
+        } else {
+            formData.append('cover_letter', this.editingApplication.cover_letter!);
+        }
+
+        // Log FormData contents
+        console.log('Sending data to backend:');
+        formData.forEach((value, key) => {
+            console.log(`${key}:`, value);
+        });
+
+        this.jobService.updateApplication(this.editingApplication.id, formData).subscribe(
+            () => {
+                this.loadApplications();
+                this.closeEditModal();
+            },
+            error => {
+                this.showToastMessage('Error updating application', 'error');
+            }
+        );
     }
   }
 
   deleteApplication(id: number | undefined) {
     if (id === undefined) return;
-    
-    if (confirm('Are you sure you want to delete this application?')) {
-      this.jobService.deleteApplication(id).subscribe(
-        () => {
-          this.loadApplications();
-        }
-      );
+
+    const applicationToDelete = this.applications.find(app => app.id === id);
+    if (applicationToDelete && confirm('Are you sure you want to delete this application?')) {
+        this.jobService.deleteApplication(id, applicationToDelete.cv!, applicationToDelete.cover_letter!).subscribe(
+            () => {
+                this.loadApplications();
+            }
+        );
     }
   }
 

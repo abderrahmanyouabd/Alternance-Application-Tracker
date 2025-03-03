@@ -43,8 +43,10 @@ export class JobService {
     return this.http.put<JobApplication>(`${this.apiUrl}/applications/${id}`, application);
   }
 
-  deleteApplication(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/applications/${id}`);
+  deleteApplication(id: number, cvPath: string, coverLetterPath: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/applications/${id}`, {
+        body: { cv: cvPath, cover_letter: coverLetterPath } // Send the paths in the request body
+    });
   }
 
   exportToExcel(applications: JobApplication[]) {
